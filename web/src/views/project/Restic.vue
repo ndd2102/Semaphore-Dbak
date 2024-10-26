@@ -3,7 +3,7 @@
     <EditDialog
       v-model="editDialog"
       :save-button-text="itemId === 'new' ? $t('create') : $t('save')"
-      :title="`${itemId === 'new' ? $t('nnew') : $t('edit')} restic_configs`"
+      :title="`${itemId === 'new' ? $t('nnew') : $t('edit')} restic`"
       @save="loadItems()"
       :max-width="450"
     >
@@ -35,13 +35,13 @@
 
     <v-toolbar flat >
       <v-app-bar-nav-icon @click="showDrawer()"></v-app-bar-nav-icon>
-      <v-toolbar-title>restic_configs</v-toolbar-title>
+      <v-toolbar-title>Restic</v-toolbar-title>
       <v-spacer></v-spacer>
       <v-btn
         color="primary"
         @click="editItem('new')"
         v-if="can(USER_PERMISSIONS.manageProjectResources)"
-      >restic_configs</v-btn>
+      >New restic</v-btn>
     </v-toolbar>
 
     <v-data-table

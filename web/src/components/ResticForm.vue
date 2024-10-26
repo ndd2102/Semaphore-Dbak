@@ -21,39 +21,59 @@
     ></v-text-field>
 
     <v-text-field
-        v-model.trim="item.url"
+        v-model.trim="item.git_url"
         :label="$t('urlOrPath')"
-        :rules="[
-          v => !!v || $t('repository_required'),
-          v => getTypeOfUrl(v) != null || $t('incorrectUrl'),
-        ]"
+        :rules="[v => (!!v || type === 'local') || 'URL is required']"
         required
         :disabled="formSaving"
-        :hide-details="true"
     ></v-text-field>
 
     <v-text-field
       v-model.trim="item.bucket"
-      :label="'bucket'"
+      :label="'Bucket'"
+      :rules="[v => (!!v || type === 'local') || 'Bucket is required']"
       required
       :disabled="formSaving || type === 'local'"
     ></v-text-field>
 
     <v-text-field
-      v-model.trim="item.access_key"
-      :label="'access_key'"
+      v-model.trim="item.restic_key"
+      :label="'Restic Key'"
+      :rules="[v => (!!v || type === 'local') || 'Restic Key is required']"
       required
       :disabled="formSaving || type === 'local'"
     ></v-text-field>
 
-    <v-text-field
-      v-model.trim="item.secret_key"
-      :label="'secret_key'"
-      required
-      type="password"
-      :disabled="formSaving || type === 'local'"
-    ></v-text-field>
-
+    <v-select
+        v-model="item.ssh_key_id"
+        :label="$t('accessKey')"
+        :items="keys"
+        item-value="id"
+        item-text="name"
+        :rules="[v => !!v || $t('key_required')]"
+        required
+        :disabled="formSaving"
+    >
+      <template v-slot:append-outer>
+        <v-tooltip left color="black" content-class="opacity1">
+          <template v-slot:activator="{ on, attrs }">
+            <v-icon
+              v-bind="attrs"
+              v-on="on"
+            >
+              mdi-help-circle
+            </v-icon>
+          </template>
+          <div class="py-4">
+            <p>{{ $t('credentialsToAccessToTheGitRepositoryItShouldBe') }}</p>
+            <ul>
+              <li><code>{{ $t('ssh') }}</code> {{ $t('ifYouUseGitOrSshUrl') }}</li>
+              <li><code>{{ $t('none') }}</code> {{ $t('ifYouUseHttpsOrFileUrl') }}</li>
+            </ul>
+          </div>
+        </v-tooltip>
+      </template>
+    </v-select>
   </v-form>
 </template>
 <script>
@@ -89,7 +109,7 @@ export default {
   },
   computed: {
     type() {
-      return this.getTypeOfUrl(this.item.url);
+      return this.getTypeOfUrl(this.item.git_url);
     },
   },
 
@@ -119,11 +139,11 @@ export default {
     setType(type) {
       let url;
 
-      const m = this.item.url.match(/^\w+:\/\/(.*)$/);
+      const m = this.item.git_url.match(/^\w+:\/\/(.*)$/);
       if (m != null) {
         url = m[1];
       } else {
-        url = this.item.url;
+        url = this.item.git_url;
       }
 
       if (type === 'local') {
@@ -132,7 +152,7 @@ export default {
         url = `${type}://${url}`;
       }
 
-      this.item.url = url;
+      this.item.git_url = url;
     },
 
     showHelpDialog(key) {
