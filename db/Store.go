@@ -270,11 +270,11 @@ type Store interface {
 	CreateTemplateVault(vault TemplateVault) (TemplateVault, error)
 	UpdateTemplateVaults(projectID int, templateID int, vaults []TemplateVault) error
 
-	GetMinIOConfig(projectID int, minioconfigID int) (MinIOConfig, error)
-    GetMinIOConfigs(projectID int, params RetrieveQueryParams) ([]MinIOConfig, error)
-    CreateMinIOConfig(minioconfig MinIOConfig) (MinIOConfig, error)
-    UpdateMinIOConfig(minioconfig MinIOConfig) error
-    DeleteMinIOConfig(projectID int, minioconfigID int) error
+	GetResticConfig(projectID int, restic_configID int) (ResticConfig, error)
+    GetResticConfigs(projectID int, params RetrieveQueryParams) ([]ResticConfig, error)
+    CreateResticConfig(restic_config ResticConfig) (ResticConfig, error)
+    UpdateResticConfig(restic_config ResticConfig) error
+    DeleteResticConfig(projectID int, restic_configID int) error
 }
 
 var AccessKeyProps = ObjectProps{
@@ -438,13 +438,13 @@ var TemplateVaultProps = ObjectProps{
 	ReferringColumnSuffix: "template_id",
 }
 
-var MinIOConfigProps = ObjectProps{
-	Type:                  reflect.TypeOf(MinIOConfig{}),
-	Name:                  "MinIO Configuration",
-	TableName:             "project__minio_config",
+var ResticConfigProps = ObjectProps{
+	Type:                  reflect.TypeOf(ResticConfig{}),
+	Name:                  "Restic Configuration",
+	TableName:             "project__restic_config",
 	PrimaryColumnName:     "id",
 	DefaultSortingColumn:  "name",
-	ReferringColumnSuffix: "minioconfig_id",
+	ReferringColumnSuffix: "restic_config_id",
 }
 
 func (p ObjectProps) GetReferringFieldsFrom(t reflect.Type) (fields []string, err error) {

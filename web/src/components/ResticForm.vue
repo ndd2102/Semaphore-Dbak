@@ -141,11 +141,11 @@ export default {
     },
 
     getItemsUrl() {
-      return `/api/project/${this.projectId}/minioconfigs`;
+      return `/api/project/${this.projectId}/restic_configs`;
     },
 
     getSingleItemUrl() {
-      return `/api/project/${this.projectId}/minioconfigs/${this.itemId}`;
+      return `/api/project/${this.projectId}/restic_configs/${this.itemId}`;
     },
   },
 };

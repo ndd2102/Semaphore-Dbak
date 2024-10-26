@@ -3,12 +3,12 @@
     <EditDialog
       v-model="editDialog"
       :save-button-text="itemId === 'new' ? $t('create') : $t('save')"
-      :title="`${itemId === 'new' ? $t('nnew') : $t('edit')} minioconfigs`"
+      :title="`${itemId === 'new' ? $t('nnew') : $t('edit')} restic_configs`"
       @save="loadItems()"
       :max-width="450"
     >
       <template v-slot:form="{ onSave, onError, needSave, needReset }">
-        <MinioForm
+        <ResticForm
           :project-id="projectId"
           :item-id="itemId"
           @save="onSave"
@@ -20,14 +20,14 @@
     </EditDialog>
 
     <ObjectRefsDialog
-      object-title="minioconfigs"
+      object-title="restic_configs"
       :object-refs="itemRefs"
       :project-id="projectId"
       v-model="itemRefsDialog"
     />
 
     <YesNoDialog
-      :title="'minioconfigs'"
+      :title="'restic_configs'"
       :text="$t('askDeleteRepo')"
       v-model="deleteItemDialog"
       @yes="deleteItem(itemId)"
@@ -35,13 +35,13 @@
 
     <v-toolbar flat >
       <v-app-bar-nav-icon @click="showDrawer()"></v-app-bar-nav-icon>
-      <v-toolbar-title>minioconfigs</v-toolbar-title>
+      <v-toolbar-title>restic_configs</v-toolbar-title>
       <v-spacer></v-spacer>
       <v-btn
         color="primary"
         @click="editItem('new')"
         v-if="can(USER_PERMISSIONS.manageProjectResources)"
-      >minioconfigs</v-btn>
+      >restic_configs</v-btn>
     </v-toolbar>
 
     <v-data-table
@@ -85,12 +85,12 @@
 </template>
 <script>
 import ItemListPageBase from '@/components/ItemListPageBase';
-import MinioForm from '@/components/MinioForm.vue';
+import ResticForm from '@/components/ResticForm.vue';
 import axios from 'axios';
 
 export default {
   mixins: [ItemListPageBase],
-  components: { MinioForm },
+  components: { ResticForm },
   data() {
     return {
       keys: null,
@@ -132,13 +132,13 @@ export default {
       }];
     },
     getItemsUrl() {
-      return `/api/project/${this.projectId}/minioconfigs`;
+      return `/api/project/${this.projectId}/restic_configs`;
     },
     getSingleItemUrl() {
-      return `/api/project/${this.projectId}/minioconfigs/${this.itemId}`;
+      return `/api/project/${this.projectId}/restic_configs/${this.itemId}`;
     },
     getEventName() {
-      return 'i-minioconfigs';
+      return 'i-restic_configs';
     },
   },
 };

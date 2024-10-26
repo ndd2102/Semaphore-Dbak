@@ -222,8 +222,8 @@ func Route() *mux.Router {
 	projectUserAPI.Path("/integrations").HandlerFunc(projects.AddIntegration).Methods("POST")
 	projectUserAPI.Path("/backup").HandlerFunc(projects.GetBackup).Methods("GET", "HEAD")
 
-	projectUserAPI.Path("/minioconfigs").HandlerFunc(projects.AddMinIOConfig).Methods("POST")
-	projectUserAPI.Path("/minioconfigs").HandlerFunc(projects.GetMinIOConfigs).Methods("GET", "HEAD")
+	projectUserAPI.Path("/restic_configs").HandlerFunc(projects.AddResticConfig).Methods("POST")
+	projectUserAPI.Path("/restic_configs").HandlerFunc(projects.GetResticConfigs).Methods("GET", "HEAD")
 
 	projectUserAPI.Path("/snapshots").HandlerFunc(projects.GetSnapshotData).Methods("GET")
 
@@ -348,12 +348,12 @@ func Route() *mux.Router {
 	projectIntegrationsAPI.HandleFunc("/{integration_id}/values/{value_id}", projects.DeleteIntegrationExtractValue).Methods("DELETE")
 	projectIntegrationsAPI.HandleFunc("/{integration_id}/values/{value_id}/refs", projects.GetIntegrationExtractValueRefs).Methods("GET")
 
-	projectMinIOConfigAPI := projectUserAPI.PathPrefix("/minioconfigs").Subrouter()
-	projectMinIOConfigAPI.Use(projects.MinIOConfigMiddleware)
+	projectResticConfigAPI := projectUserAPI.PathPrefix("/restic_configs").Subrouter()
+	projectResticConfigAPI.Use(projects.ResticConfigMiddleware)
 	
-	projectMinIOConfigAPI.HandleFunc("/{minioconfig_id}", projects.GetMinIOConfigs).Methods("GET", "HEAD")
-	projectMinIOConfigAPI.HandleFunc("/{minioconfig_id}", projects.UpdateMinIOConfig).Methods("PUT")
-	projectMinIOConfigAPI.HandleFunc("/{minioconfig_id}", projects.RemoveMinIOConfig).Methods("DELETE")
+	projectResticConfigAPI.HandleFunc("/{restic_config_id}", projects.GetResticConfigs).Methods("GET", "HEAD")
+	projectResticConfigAPI.HandleFunc("/{restic_config_id}", projects.UpdateResticConfig).Methods("PUT")
+	projectResticConfigAPI.HandleFunc("/{restic_config_id}", projects.RemoveResticConfig).Methods("DELETE")
 
 	if os.Getenv("DEBUG") == "1" {
 		defer debugPrintRoutes(r)
