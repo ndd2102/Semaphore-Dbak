@@ -355,6 +355,11 @@ func Route() *mux.Router {
 	projectResticConfigAPI.HandleFunc("/{restic_config_id}", projects.UpdateResticConfig).Methods("PUT")
 	projectResticConfigAPI.HandleFunc("/{restic_config_id}", projects.RemoveResticConfig).Methods("DELETE")
 
+	projectSnapshotAPI := projectUserAPI.PathPrefix("/snapshots").Subrouter()
+	projectSnapshotAPI.Use(projects.ResticConfigMiddleware)
+	projectSnapshotAPI.HandleFunc("/{restic_config_id}", projects.GetSnapshotData).Methods("GET")
+	projectSnapshotAPI.HandleFunc("/{restic_config_id}", projects.RemoveSnapshot).Methods("DELETE")
+
 	if os.Getenv("DEBUG") == "1" {
 		defer debugPrintRoutes(r)
 	}

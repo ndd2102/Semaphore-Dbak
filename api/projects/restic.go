@@ -3,6 +3,11 @@ package projects
 import (
     "net/http"
     "errors"
+    "os"
+    "os/exec"
+    "strings"
+    "fmt"
+    "encoding/json"
 
     "github.com/ansible-semaphore/semaphore/api/helpers"
     "github.com/ansible-semaphore/semaphore/db"
@@ -154,4 +159,172 @@ func RemoveResticConfig(w http.ResponseWriter, r *http.Request) {
     })
 
     w.WriteHeader(http.StatusNoContent)
+}
+
+func GetSnapshotData(w http.ResponseWriter, r *http.Request) {
+    project := context.Get(r, "project").(db.Project)
+    restic_config := context.Get(r, "restic_config").(db.ResticConfig)
+    restic_configID, err := helpers.GetIntParam("restic_config_id", w, r)
+    if err != nil {
+        helpers.WriteJSON(w, http.StatusBadRequest, map[string]string{
+            "error": "Invalid or missing 'restic_config_id' parameter",
+        })
+        return
+    }
+
+    key, err := helpers.Store(r).GetAccessKey(project.ID, restic_configID) // Gọi hàm GetAccessKey từ Store
+	if err != nil {
+		helpers.WriteJSON(w, http.StatusInternalServerError, map[string]string{
+			"error": "Failed to get access key: " + err.Error(),
+		})
+		return
+	}
+
+    err = key.DeserializeSecret()
+	if err != nil {
+		helpers.WriteJSON(w, http.StatusInternalServerError, map[string]string{
+			"error": "Failed to decrypt secret: " + err.Error(),
+		})
+		return
+	}
+
+    var password string
+	if key.Type == db.AccessKeyLoginPassword {
+		password = key.LoginPassword.Password
+	} else {
+		helpers.WriteJSON(w, http.StatusInternalServerError, map[string]string{
+			"error": "AccessKey type is not 'login_password'",
+		})
+		return
+	}
+
+    // Set environment variables needed for Restic using retrieved config data
+    os.Setenv("RESTIC_REPOSITORY", "s3:" + restic_config.URL + "/" + restic_config.Bucket)
+    os.Setenv("RESTIC_PASSWORD", restic_config.ResticKey)        
+    os.Setenv("AWS_ACCESS_KEY_ID", key.Name)    
+    os.Setenv("AWS_SECRET_ACCESS_KEY", password)
+
+	// Debug: In giá trị ra để kiểm tra
+	fmt.Printf("projectID: %s, accessKeyID: %s\n", restic_config.URL + "/" + restic_config.Bucket, restic_config.ResticKey)
+
+	// Ví dụ lệnh để lấy snapshots từ repository của Restic
+	cmd := exec.Command("restic", "snapshots", "--json")
+
+	// Thực thi lệnh và lấy kết quả
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		helpers.WriteJSON(w, http.StatusInternalServerError, map[string]string{
+			"error": "Failed to execute Restic command: " + err.Error(),
+		})
+		return
+	}
+
+	// Trả lại dữ liệu lệnh đã thực thi dưới dạng JSON
+	var snapshots []map[string]interface{}
+	err = json.Unmarshal(output, &snapshots)
+	if err != nil {
+		helpers.WriteJSON(w, http.StatusInternalServerError, map[string]string{
+			"error": "Failed to parse JSON output: " + err.Error(),
+		})
+		return
+	}
+
+	for _, snapshot := range snapshots {
+		snapshotID, ok := snapshot["id"].(string)
+		if !ok {
+			continue
+		}
+
+		// Chạy lệnh để lấy kích thước snapshot
+		statsCmd := exec.Command("restic", "stats", snapshotID, "--mode", "restore-size")
+		statsOutput, err := statsCmd.CombinedOutput()
+		if err != nil {
+			fmt.Printf("Failed to get stats for snapshot %s: %s\n", snapshotID, err.Error())
+			continue
+		}
+        
+        fmt.Printf("Stats output for snapshot %s:\n%s\n", snapshotID, string(statsOutput))
+
+		for _, line := range strings.Split(string(statsOutput), "\n") {
+			if strings.Contains(line, "Total Size:") {
+				size := strings.TrimSpace(strings.Split(line, "Total Size:")[1])
+				snapshot["size"] = size
+				break
+            }
+		}
+	}
+
+	helpers.WriteJSON(w, http.StatusOK, snapshots)
+}
+
+func RemoveSnapshot(w http.ResponseWriter, r *http.Request) {
+    project := context.Get(r, "project").(db.Project)
+    restic_config := context.Get(r, "restic_config").(db.ResticConfig)
+    restic_configID, err := helpers.GetIntParam("restic_config_id", w, r)
+    if err != nil {
+        helpers.WriteJSON(w, http.StatusBadRequest, map[string]string{
+            "error": "Invalid or missing 'restic_config_id' parameter",
+        })
+        return
+    }
+
+    // Lấy snapshotID từ URL hoặc request body
+    snapshotID := r.URL.Query().Get("snapshot_id")
+    if snapshotID == "" {
+        helpers.WriteJSON(w, http.StatusBadRequest, map[string]string{
+            "error": "Missing 'snapshot_id' parameter",
+        })
+        return
+    }
+
+    key, err := helpers.Store(r).GetAccessKey(project.ID, restic_configID)
+    if err != nil {
+        helpers.WriteJSON(w, http.StatusInternalServerError, map[string]string{
+            "error": "Failed to get access key: " + err.Error(),
+        })
+        return
+    }
+
+    // Giải mã Secret từ AccessKey trực tiếp
+    err = key.DeserializeSecret()
+    if err != nil {
+        helpers.WriteJSON(w, http.StatusInternalServerError, map[string]string{
+            "error": "Failed to decrypt secret: " + err.Error(),
+        })
+        return
+    }
+
+    // Kiểm tra loại AccessKey để lấy mật khẩu
+    var password string
+    if key.Type == db.AccessKeyLoginPassword {
+        password = key.LoginPassword.Password
+    } else {
+        helpers.WriteJSON(w, http.StatusInternalServerError, map[string]string{
+            "error": "AccessKey type is not 'login_password'",
+        })
+        return
+    }
+
+    // Set environment variables needed for Restic
+    os.Setenv("RESTIC_REPOSITORY", "s3:" + restic_config.URL + "/" + restic_config.Bucket)
+    os.Setenv("RESTIC_PASSWORD", restic_config.ResticKey)
+    os.Setenv("AWS_ACCESS_KEY_ID", key.Name)
+    os.Setenv("AWS_SECRET_ACCESS_KEY", password)
+
+    // Xóa snapshot bằng lệnh Restic
+    cmd := exec.Command("restic", "forget", snapshotID, "--prune")
+    output, err := cmd.CombinedOutput()
+    if err != nil {
+        helpers.WriteJSON(w, http.StatusInternalServerError, map[string]string{
+            "error": "Failed to delete snapshot: " + err.Error(),
+            "details": string(output),
+        })
+        return
+    }
+
+    // Phản hồi khi xóa thành công
+    helpers.WriteJSON(w, http.StatusOK, map[string]string{
+        "message": "Snapshot deleted successfully",
+        "snapshot_id": snapshotID,
+    })
 }

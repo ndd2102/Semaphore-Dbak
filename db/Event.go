@@ -37,7 +37,7 @@ const (
 	EventIntegration             EventObjectType = "integration"
 	EventIntegrationExtractValue EventObjectType = "integrationextractvalue"
 	EventIntegrationMatcher      EventObjectType = "integrationmatcher"
-	EventResticConfig             EventObjectType = "restic_config"
+	EventResticConfig            EventObjectType = "restic_config"
 )
 
 func FillEvents(d Store, events []Event) (err error) {

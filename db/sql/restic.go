@@ -66,8 +66,7 @@ func (d *SqlDb) CreateResticConfig(restic_config db.ResticConfig) (newRestic db.
         restic_config.URL,
         restic_config.ResticKey,
         restic_config.SSHKeyID,
-        restic_config.Bucket,
-    )
+        restic_config.Bucket)
 
     if err != nil {
         return db.ResticConfig{}, err
@@ -86,13 +85,13 @@ func (d *SqlDb) UpdateResticConfig(restic_config db.ResticConfig) error {
 
     _, err = d.exec(
         "UPDATE project__restic_config SET name=?, url=?, restic_key=?, ssh_key_id=?, bucket=? WHERE id=? AND project_id=?",
-        restic_config.ProjectID,
         restic_config.Name,
         restic_config.URL,
         restic_config.ResticKey,
         restic_config.SSHKeyID,
         restic_config.Bucket,
-    )
+        restic_config.ID,
+        restic_config.ProjectID)
 
     return err
 }

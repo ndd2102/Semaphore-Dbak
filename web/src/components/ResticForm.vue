@@ -21,7 +21,7 @@
     ></v-text-field>
 
     <v-text-field
-        v-model.trim="item.git_url"
+        v-model.trim="item.url"
         :label="$t('urlOrPath')"
         :rules="[v => (!!v || type === 'local') || 'URL is required']"
         required

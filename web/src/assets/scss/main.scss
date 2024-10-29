@@ -70,3 +70,11 @@ $mdi-font-path: "~@mdi/font/fonts";
 .opacity1 {
   opacity: 1 !important;
 }
+
+.resizable-table {
+  resize: both;
+  overflow: auto;
+  min-width: 300px;
+  min-height: 200px;
+  border: 1px solid lightgray;
+}
