@@ -9,6 +9,7 @@ import Environment from '../views/project/Environment.vue';
 import Inventory from '../views/project/Inventory.vue';
 import Keys from '../views/project/Keys.vue';
 import Repositories from '../views/project/Repositories.vue';
+import Restic from '../views/project/Restic.vue';
 import Team from '../views/project/Team.vue';
 import Users from '../views/Users.vue';
 import Auth from '../views/Auth.vue';
@@ -79,6 +80,10 @@ const routes = [
   {
     path: '/project/:projectId/repositories',
     component: Repositories,
+  },
+  {
+    path: '/project/:projectId/restic_configs',
+    component: Restic,
   },
   {
     path: '/project/:projectId/keys',

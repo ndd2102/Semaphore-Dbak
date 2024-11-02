@@ -274,6 +274,20 @@
 
         <v-list-item
           v-if="project.type === ''"
+          key="restic_configs"
+          :to="`/project/${projectId}/restic_configs`"
+        >
+          <v-list-item-icon>
+            <v-icon>mdi-git</v-icon>
+          </v-list-item-icon>
+
+          <v-list-item-content>
+            <v-list-item-title>Restic</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+
+        <v-list-item
+          v-if="project.type === ''"
           key="integrations"
           :to="`/project/${projectId}/integrations`"
         >

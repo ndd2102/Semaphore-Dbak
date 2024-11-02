@@ -72,6 +72,7 @@ type ObjectProps struct {
 	SortableColumns       []string
 	DefaultSortingColumn  string
 	SortInverted          bool // sort from high to low object ID by default. It is useful for some NoSQL implementations.
+	Name                  string
 }
 
 var ErrNotFound = errors.New("no rows in result set")
@@ -251,6 +252,12 @@ type Store interface {
 	DeleteGlobalRunner(runnerID int) error
 	UpdateRunner(runner Runner) error
 	CreateRunner(runner Runner) (Runner, error)
+
+	GetResticConfig(projectID int, restic_configID int) (ResticConfig, error)
+    GetResticConfigs(projectID int, params RetrieveQueryParams) ([]ResticConfig, error)
+    CreateResticConfig(restic_config ResticConfig) (ResticConfig, error)
+    UpdateResticConfig(restic_config ResticConfig) error
+    DeleteResticConfig(projectID int, restic_configID int) error
 }
 
 var AccessKeyProps = ObjectProps{
@@ -400,6 +407,15 @@ var OptionProps = ObjectProps{
 	Type:              reflect.TypeOf(Option{}),
 	PrimaryColumnName: "key",
 	IsGlobal:          true,
+}
+
+var ResticConfigProps = ObjectProps{
+	Type:                  reflect.TypeOf(ResticConfig{}),
+	Name:                  "Restic Configuration",
+	TableName:             "project__restic_config",
+	PrimaryColumnName:     "id",
+	DefaultSortingColumn:  "name",
+	ReferringColumnSuffix: "restic_config_id",
 }
 
 func (p ObjectProps) GetReferringFieldsFrom(t reflect.Type) (fields []string, err error) {

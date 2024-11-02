@@ -189,6 +189,11 @@ func Route() *mux.Router {
 	projectUserAPI.Path("/integrations").HandlerFunc(projects.AddIntegration).Methods("POST")
 	projectUserAPI.Path("/backup").HandlerFunc(projects.GetBackup).Methods("GET", "HEAD")
 
+	projectUserAPI.Path("/restic_configs").HandlerFunc(projects.AddResticConfig).Methods("POST")
+	projectUserAPI.Path("/restic_configs").HandlerFunc(projects.GetResticConfigs).Methods("GET", "HEAD")
+
+	projectUserAPI.Path("/snapshots").HandlerFunc(projects.GetSnapshotData).Methods("GET")
+
 	//
 	// Updating and deleting project
 	projectAdminAPI := authenticatedAPI.Path("/project/{project_id}").Subrouter()
@@ -308,6 +313,19 @@ func Route() *mux.Router {
 	projectIntegrationsAPI.HandleFunc("/{integration_id}/values/{value_id}", projects.UpdateIntegrationExtractValue).Methods("PUT")
 	projectIntegrationsAPI.HandleFunc("/{integration_id}/values/{value_id}", projects.DeleteIntegrationExtractValue).Methods("DELETE")
 	projectIntegrationsAPI.HandleFunc("/{integration_id}/values/{value_id}/refs", projects.GetIntegrationExtractValueRefs).Methods("GET")
+
+	projectResticConfigAPI := projectUserAPI.PathPrefix("/restic_configs").Subrouter()
+	projectResticConfigAPI.Use(projects.ResticConfigMiddleware)
+	
+	projectResticConfigAPI.HandleFunc("/{restic_config_id}", projects.GetResticConfigs).Methods("GET", "HEAD")
+	projectResticConfigAPI.HandleFunc("/{restic_config_id}", projects.UpdateResticConfig).Methods("PUT")
+	projectResticConfigAPI.HandleFunc("/{restic_config_id}", projects.RemoveResticConfig).Methods("DELETE")
+
+
+	projectSnapshotAPI := projectUserAPI.PathPrefix("/snapshots").Subrouter()
+	projectSnapshotAPI.Use(projects.ResticConfigMiddleware)
+	projectSnapshotAPI.HandleFunc("/{restic_config_id}", projects.GetSnapshotData).Methods("GET")
+	projectSnapshotAPI.HandleFunc("/{restic_config_id}", projects.RemoveSnapshot).Methods("DELETE")
 
 	if os.Getenv("DEBUG") == "1" {
 		defer debugPrintRoutes(r)
