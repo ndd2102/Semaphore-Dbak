@@ -15,6 +15,7 @@ import Users from '../views/Users.vue';
 import Auth from '../views/Auth.vue';
 import New from '../views/project/New.vue';
 import Integrations from '../views/project/Integrations.vue';
+import Snapshots from '../views/project/Snapshots.vue';
 
 import IntegrationExtractor from '../views/project/IntegrationExtractor.vue';
 
@@ -84,6 +85,10 @@ const routes = [
   {
     path: '/project/:projectId/restic_configs',
     component: Restic,
+  },
+  {
+    path: '/project/:projectId/snapshots',
+    component: Snapshots,
   },
   {
     path: '/project/:projectId/keys',

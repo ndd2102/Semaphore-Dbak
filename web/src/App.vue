@@ -288,6 +288,20 @@
 
         <v-list-item
           v-if="project.type === ''"
+          key="snapshots"
+          :to="`/project/${projectId}/snapshots`"
+        >
+          <v-list-item-icon>
+            <v-icon>mdi-git</v-icon>
+          </v-list-item-icon>
+
+          <v-list-item-content>
+            <v-list-item-title>Snapshots</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+
+        <v-list-item
+          v-if="project.type === ''"
           key="integrations"
           :to="`/project/${projectId}/integrations`"
         >

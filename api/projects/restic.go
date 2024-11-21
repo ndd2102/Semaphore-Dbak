@@ -188,7 +188,6 @@ func GetSnapshotData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-    fmt.Printf(key.password)
     var password string
 	if key.Type == db.AccessKeyLoginPassword {
 		password = key.LoginPassword.Password
