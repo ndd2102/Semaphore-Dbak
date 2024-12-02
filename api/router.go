@@ -321,6 +321,9 @@ func Route() *mux.Router {
 	projectResticConfigAPI.HandleFunc("/{restic_config_id}", projects.UpdateResticConfig).Methods("PUT")
 	projectResticConfigAPI.HandleFunc("/{restic_config_id}", projects.RemoveResticConfig).Methods("DELETE")
 
+	projectCredentialAPI := projectUserAPI.PathPrefix("/credentials").Subrouter()
+	projectCredentialAPI.Use(projects.ResticConfigMiddleware)
+	projectCredentialAPI.HandleFunc("/{restic_config_id}", projects.GetResticCredentials).Methods("GET")
 
 	projectSnapshotAPI := projectUserAPI.PathPrefix("/snapshots").Subrouter()
 	projectSnapshotAPI.Use(projects.ResticConfigMiddleware)

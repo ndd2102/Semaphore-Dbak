@@ -46,7 +46,6 @@ func GetResticConfigs(w http.ResponseWriter, r *http.Request) {
     }
 
     project := context.Get(r, "project").(db.Project)
-
 	restics, err := helpers.Store(r).GetResticConfigs(project.ID, helpers.QueryParams(r.URL))
 
     if err != nil {
@@ -326,5 +325,38 @@ func RemoveSnapshot(w http.ResponseWriter, r *http.Request) {
     helpers.WriteJSON(w, http.StatusOK, map[string]string{
         "message": "Snapshot deleted successfully",
         "snapshot_id": snapshotID,
+    })
+}
+
+func GetResticCredentials(w http.ResponseWriter, r *http.Request) {
+    project := context.Get(r, "project").(db.Project)
+    restic_configID, err := helpers.GetIntParam("restic_config_id", w, r)
+    if err != nil {
+        helpers.WriteJSON(w, http.StatusBadRequest, map[string]string{
+            "error": "Invalid or missing 'restic_config_id' parameter",
+        })
+        return
+    }
+    key, err := helpers.Store(r).GetAccessKey(project.ID, restic_configID)
+    if err != nil {
+        helpers.WriteJSON(w, http.StatusInternalServerError, map[string]string{
+            "error": "Failed to get access key: " + err.Error(),
+        })
+        return
+    }
+
+    // Giải mã Secret từ AccessKey trực tiếp
+    err = key.DeserializeSecret()
+    if err != nil {
+        helpers.WriteJSON(w, http.StatusInternalServerError, map[string]string{
+            "error": "Failed to decrypt secret: " + err.Error(),
+        })
+        return
+    }
+
+    // Trả về username và password
+    helpers.WriteJSON(w, http.StatusOK, map[string]string{
+        "username": key.Name,
+        "password": key.LoginPassword.Password,
     })
 }
