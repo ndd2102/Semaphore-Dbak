@@ -16,7 +16,7 @@
     ></v-text-field>
 
     <!-- Extra Variables Section -->
-    <v-subheader class="px-0 mt-4">
+    <v-subheader class="px-0">
       Extra Variables
     </v-subheader>
 
@@ -29,7 +29,7 @@
 
     <v-text-field
       v-model="environmentVariables.openshift_api"
-      label="Kubernetes API"
+      label="Openshift API"
       required
       :disabled="formSaving"
     ></v-text-field>
@@ -211,9 +211,26 @@
                 class="v-text-field--solo--no-min-height"
               ></v-text-field>
             </td>
+            <!-- Cột Actions -->
+            <td style="width: 38px;">
+              <v-icon
+                small
+                class="pa-1"
+                @click="removeDatabase(item)"
+              >
+                mdi-delete
+              </v-icon>
+            </td>
           </tr>
         </template>
       </v-data-table>
+
+      <div class="text-right mt-2 mb-4">
+        <v-btn
+          color="primary"
+          @click="addDatabase"
+        >Add Database</v-btn>
+      </div>
     </div>
 
     <!-- Restore Configuration -->
@@ -260,9 +277,28 @@
                 hide-details
               ></v-text-field>
             </td>
+            <!-- Cột Actions -->
+            <td style="width: 38px;">
+              <v-icon
+                small
+                class="pa-1"
+                @click="removeRestorePVC(item)"
+              >
+                mdi-delete
+              </v-icon>
+            </td>
           </tr>
         </template>
       </v-data-table>
+
+      <div class="text-right mt-2 mb-4">
+        <v-btn
+          color="primary"
+          @click="addRestorePVC"
+        >
+          Add Restore PVC
+        </v-btn>
+      </div>
 
       <!-- Restore Databases Section -->
       <v-subheader class="px-0 mt-4">
@@ -316,9 +352,28 @@
                 hide-details
               ></v-text-field>
             </td>
+            <!-- Cột Actions -->
+            <td style="width: 38px;">
+              <v-icon
+                small
+                class="pa-1"
+                @click="removeRestoreDB(item)"
+              >
+                mdi-delete
+              </v-icon>
+            </td>
           </tr>
         </template>
       </v-data-table>
+
+      <div class="text-right mt-2 mb-4">
+        <v-btn
+          color="primary"
+          @click="addRestoreDB"
+        >
+          Add Restore Database
+        </v-btn>
+      </div>
     </div>
   </v-form>
 </template>
@@ -376,34 +431,13 @@ export default {
             mail_server: '',
           },
         },
-        ac_backup_database: [
-          {
-            host: '',
-            user: '',
-            password: '',
-            database: '',
-            type: '',
-          },
-        ],
-        selectedResticId: null, // To store the selected Restic ID
+        ac_backup_database: [], // Mảng trống để người dùng thêm database
+        selectedResticId: null, // Lưu trữ ID của Restic đã chọn
       },
 
       // Restore data
-      restorePVCs: [
-        {
-          src: '',
-          dest: '',
-          version: '',
-        },
-      ],
-      restoreDBs: [
-        {
-          src: '',
-          dest: '',
-          version: '',
-          password: '',
-        },
-      ],
+      restorePVCs: [],
+      restoreDBs: [],
 
       databaseHeaders: [
         { text: 'Host', value: 'host' },
@@ -411,12 +445,14 @@ export default {
         { text: 'Password', value: 'password' },
         { text: 'Database', value: 'database' },
         { text: 'Type', value: 'type' },
+        { text: 'Actions', value: 'actions', sortable: false },
       ],
 
       restorePVCHeaders: [
         { text: 'Source PVC', value: 'src' },
         { text: 'Destination PVC', value: 'dest' },
         { text: 'Version', value: 'version' },
+        { text: 'Actions', value: 'actions', sortable: false },
       ],
 
       restoreDBHeaders: [
@@ -424,6 +460,7 @@ export default {
         { text: 'Destination DB', value: 'dest' },
         { text: 'Version', value: 'version' },
         { text: 'Password', value: 'password' },
+        { text: 'Actions', value: 'actions', sortable: false },
       ],
     };
   },
@@ -438,7 +475,7 @@ export default {
         const response = await axios.get(`/api/project/${this.projectId}/restic_configs`);
         this.resticOptions = response.data;
 
-        // If editing an existing item and a Restic config is already selected
+        // Nếu đang chỉnh sửa và đã chọn Restic config
         if (this.environmentVariables.selectedResticId) {
           this.selectedRestic = this.environmentVariables.selectedResticId;
           await this.onResticSelected();
@@ -512,6 +549,54 @@ export default {
       }
     },
 
+    addDatabase() {
+      this.environmentVariables.ac_backup_database.push({
+        host: '',
+        user: '',
+        password: '',
+        database: '',
+        type: '',
+      });
+    },
+
+    removeDatabase(item) {
+      const index = this.environmentVariables.ac_backup_database.indexOf(item);
+      if (index > -1) {
+        this.environmentVariables.ac_backup_database.splice(index, 1);
+      }
+    },
+
+    addRestorePVC() {
+      this.restorePVCs.push({
+        src: '',
+        dest: '',
+        version: '',
+      });
+    },
+
+    removeRestorePVC(item) {
+      const index = this.restorePVCs.indexOf(item);
+      if (index > -1) {
+        this.restorePVCs.splice(index, 1);
+      }
+    },
+
+    addRestoreDB() {
+      this.restoreDBs.push({
+        src: '',
+        dest: '',
+        version: '',
+        password: '',
+      });
+    },
+
+    removeRestoreDB(item) {
+      const index = this.restoreDBs.indexOf(item);
+      if (index > -1) {
+        this.restoreDBs.splice(index, 1);
+      }
+    },
+
     beforeSave() {
       // Save the selected Restic ID
       this.environmentVariables.selectedResticId = this.selectedRestic;
@@ -531,21 +616,11 @@ export default {
         this.environmentVariables = { ...this.environmentVariables, ...data };
 
         // Tải dữ liệu restore
-        this.restorePVCs = data.ac_restore_pvc || [
-          {
-            src: '',
-            dest: '',
-            version: '',
-          },
-        ];
-        this.restoreDBs = data.ac_restore_db || [
-          {
-            src: '',
-            dest: '',
-            version: '',
-            password: '',
-          },
-        ];
+        this.restorePVCs = data.ac_restore_pvc || [];
+        this.restoreDBs = data.ac_restore_db || [];
+
+        // Tải dữ liệu database
+        this.environmentVariables.ac_backup_database = data.ac_backup_database || [];
 
         // Set the selected Restic ID and populate the S3 fields
         if (this.environmentVariables.selectedResticId) {
