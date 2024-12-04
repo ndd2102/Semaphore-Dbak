@@ -34,6 +34,13 @@
       :disabled="formSaving"
     ></v-text-field>
 
+    <v-text-field
+      v-model="environmentVariables.ac_backup_configuration.namespace"
+      label="Namespace"
+      required
+      :disabled="formSaving"
+    ></v-text-field>
+
     <!-- Restic Configuration Section -->
     <v-subheader class="px-0 mt-4">
       Restic Configuration
@@ -75,13 +82,6 @@
         v-model.number="environmentVariables.ac_backup_configuration.concurrent_backup_job_limit"
         label="Concurrent Backup Job Limit"
         type="number"
-        required
-        :disabled="formSaving"
-      ></v-text-field>
-
-      <v-text-field
-        v-model="environmentVariables.ac_backup_configuration.namespace"
-        label="Namespace"
         required
         :disabled="formSaving"
       ></v-text-field>

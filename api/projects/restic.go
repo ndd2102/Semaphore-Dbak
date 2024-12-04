@@ -188,7 +188,9 @@ func GetSnapshotData(w http.ResponseWriter, r *http.Request) {
 	}
 
     var password string
+    var username string
 	if key.Type == db.AccessKeyLoginPassword {
+        username = key.LoginPassword.Login
 		password = key.LoginPassword.Password
 	} else {
 		helpers.WriteJSON(w, http.StatusInternalServerError, map[string]string{
@@ -200,11 +202,11 @@ func GetSnapshotData(w http.ResponseWriter, r *http.Request) {
     // Set environment variables needed for Restic using retrieved config data
     os.Setenv("RESTIC_REPOSITORY", "s3:" + restic_config.URL + "/" + restic_config.Bucket)
     os.Setenv("RESTIC_PASSWORD", restic_config.ResticKey)        
-    os.Setenv("AWS_ACCESS_KEY_ID", key.Name)    
+    os.Setenv("AWS_ACCESS_KEY_ID", username)    
     os.Setenv("AWS_SECRET_ACCESS_KEY", password)
 
 	// Debug: In giá trị ra để kiểm tra
-	fmt.Printf("projectID: %s, accessKeyID: %s\n", restic_config.URL + "/" + restic_config.Bucket, restic_config.ResticKey)
+	fmt.Printf("projectID: %s, accessKeyID: %s, keyName: %s, password: %s\n", restic_config.URL + "/" + restic_config.Bucket, restic_config.ResticKey, username, password)
 
 	// Ví dụ lệnh để lấy snapshots từ repository của Restic
 	cmd := exec.Command("restic", "snapshots", "--json")
@@ -337,6 +339,7 @@ func GetResticCredentials(w http.ResponseWriter, r *http.Request) {
         })
         return
     }
+
     key, err := helpers.Store(r).GetAccessKey(project.ID, restic_configID)
     if err != nil {
         helpers.WriteJSON(w, http.StatusInternalServerError, map[string]string{
@@ -356,7 +359,7 @@ func GetResticCredentials(w http.ResponseWriter, r *http.Request) {
 
     // Trả về username và password
     helpers.WriteJSON(w, http.StatusOK, map[string]string{
-        "username": key.Name,
+        "username": key.LoginPassword.Login,
         "password": key.LoginPassword.Password,
     })
 }

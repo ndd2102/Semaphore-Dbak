@@ -278,7 +278,7 @@
           :to="`/project/${projectId}/restic_configs`"
         >
           <v-list-item-icon>
-            <v-icon>mdi-git</v-icon>
+            <v-icon>mdi-alpha-r-circle</v-icon>
           </v-list-item-icon>
 
           <v-list-item-content>
@@ -292,7 +292,7 @@
           :to="`/project/${projectId}/snapshots`"
         >
           <v-list-item-icon>
-            <v-icon>mdi-git</v-icon>
+            <v-icon>mdi-database-search</v-icon>
           </v-list-item-icon>
 
           <v-list-item-content>
